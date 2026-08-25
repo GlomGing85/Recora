@@ -1,5 +1,13 @@
 # 🌸 Recora — запис екрана для Android
 
+---
+
+[![Made with Arena.ai Agent](./arena-agent.svg)](https://arena.ai/agent)
+
+![Kotlin](https://img.shields.io/badge/kotlin-%237F52FF.svg?style=for-the-badge&logo=kotlin&logoColor=white) [![Licence](https://img.shields.io/github/license/Ileriayo/markdown-badges?style=for-the-badge)](./LICENSE.md)
+
+---
+
 Простий застосунок для запису екрана на **Android 7.0/7.1 (API 24) і новіших**, написаний на Kotlin.
 Запис виконується через MediaProjection API, відео зберігається у форматі MP4 (H.264).
 
