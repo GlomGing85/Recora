@@ -26,17 +26,21 @@
 |:---:|:---:|
 | <img src="docs/screenshots/home.jpg" width="260" alt="Головний екран Recora"> | <img src="docs/screenshots/recording.jpg" width="260" alt="Recora — йде запис"> |
 
-## Можливості (v0.1)
+## Можливості
+
+### ⭐ Поточні (v0.2)
 
 - ⏺ Запис екрана у MP4 (до 1280p, 30 fps, H.264)
+- 🎤 **Звук мікрофона** — перемикач на головному екрані (AAC 128 кбіт/с)
+- 📂 **Збереження у «Фільми/Recora»** через MediaStore — записи видно в будь-якій галереї
+  і вони залишаються після видалення застосунку
+- 🗑 **Видалення записів** довгим тапом по елементу списку
 - 🔔 Фоновий сервіс зі сповіщенням та кнопкою «Зупинити»
 - 📼 Список записів у застосунку, перегляд по тапу
-- 🖼 Автоматична поява відео у «Галереї» (MediaScanner)
-- 🔒 Без зайвих дозволів на сховище: записи у власній теці застосунку
-  (`Android/data/com.recora.app/files/Movies/ScreenRecorder`)
 
-> ⚠️ У v0.1 записи прив'язані до теки застосунку і **видаляються разом з ним**.
-> Перенесення у спільну теку «Фільми» через MediaStore заплановано у v0.2.
+> ℹ️ На Android 7–9 для спільної теки потрібен дозвіл на сховище;
+> якщо його не дати, записи потраплять у приватну теку застосунку
+> (`Android/data/com.recora.app/files/Movies/ScreenRecorder`) — усе одно нічого не загубиться.
 
 ## Вимоги
 
@@ -83,9 +87,10 @@ screen-recorder/
 │   ├── build.gradle.kts            # конфігурація модуля (minSdk 24, target 35)
 │   └── src/main/
 │       ├── AndroidManifest.xml
-│       ├── java/com/screenrecorder/app/
-│       │   ├── MainActivity.kt         # UI + запит дозволу MediaProjection
+│       ├── java/com/recora/app/
+│       │   ├── MainActivity.kt         # UI, дозволи, перемикач мікрофона
 │       │   ├── ScreenRecordService.kt  # запис екрана (MediaProjection + MediaRecorder)
+│       │   ├── RecordingStore.kt       # MediaStore/файли: збереження, список, видалення
 │       │   └── RecordingsAdapter.kt    # список відео
 │       └── res/                    # макети, рядки (укр.), іконки, тема
 ├── build.gradle.kts                # версії AGP 8.7.3 / Kotlin 2.0.21
@@ -95,15 +100,17 @@ screen-recorder/
 ## Як це працює технічно
 
 `MediaProjection` створює `VirtualDisplay`, який «малює» копію екрана на
-`Surface` від `MediaRecorder`. Сервіс працює у foreground з типом
-`mediaProjection` (вимога Android 14+). Після зупинки файл сканується
-MediaScanner'ом і з'являється у «Галереї».
+`Surface` від `MediaRecorder` (H.264; з мікрофона — ще й AAC). Сервіс працює
+у foreground з типом `mediaProjection` (вимога Android 14+). Збереження —
+через `RecordingStore`: MediaStore у «Фільми/Recora» на Android 10+ чи прямий
+файл на Android 7–9.
 
 ## Дорожня карта 🗺
 
-| Версія | Що додамо |
+| Версія | Що всередині |
 |--------|-----------|
-| v0.2 | 🎤 Звук мікрофона, збереження у спільну теку «Фільми» (MediaStore) |
+| v0.1 | ✅ Запис екрана, сервіс + сповіщення, список записів |
+| v0.2 | ✅ 🎤 Звук мікрофона, 📂 «Фільми/Recora» (MediaStore), 🗑 видалення |
 | v0.3 | ⚙️ Налаштування: роздільна здатність, бітрейт, FPS |
 | v0.4 | ⏸ Пауза / відновлення запису (працює з Android 7.0) |
 | v0.5 | 🎈 Плаваюча кнопка поверх інших застосунків |

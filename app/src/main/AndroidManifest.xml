@@ -6,6 +6,17 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
     <!-- Сповіщення (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Звук мікрофона (опційно, перемикач у UI) -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Запис у спільну теку «Фільми» — лише для Android 7–9 -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+
+    <!-- Мікрофон не обов'язковий: без нього застосунок записує лише відео -->
+    <uses-feature
+        android:name="android.hardware.microphone"
+        android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -30,7 +41,7 @@
             android:exported="false"
             android:foregroundServiceType="mediaProjection" />
 
-        <!-- Для відкриття готових відео через FileProvider -->
+        <!-- Для відкриття записів через FileProvider (спадкові та Android <10) -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

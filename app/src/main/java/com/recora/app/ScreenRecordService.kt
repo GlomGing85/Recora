@@ -11,11 +11,9 @@ import android.content.pm.ServiceInfo
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
 import android.media.MediaRecorder
-import android.media.MediaScannerConnection
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.Build
-import android.os.Environment
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.IBinder
@@ -26,7 +24,6 @@ import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import kotlinx.coroutines.flow.MutableStateFlow
-import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -34,7 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Сервіс переднього плану, що захоплює екран через MediaProjection
- * і записує відео у MP4 (H.264) за допомогою MediaRecorder.
+ * і записує відео у MP4 (H.264 + опційно AAC з мікрофона).
  *
  * Сумісність: Android 7.0 (API 24) і новіші.
  */
@@ -45,6 +42,7 @@ class ScreenRecordService : Service() {
         const val ACTION_STOP = "com.recora.app.action.STOP"
         const val EXTRA_RESULT_CODE = "extra_result_code"
         const val EXTRA_RESULT_DATA = "extra_result_data"
+        const val EXTRA_WITH_AUDIO = "extra_with_audio"
 
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "screen_recording"
@@ -52,20 +50,8 @@ class ScreenRecordService : Service() {
         /** Чи йде запис зараз (для оновлення UI активності). */
         val isRecording = MutableStateFlow(false)
 
-        /** Одноразова подія: останній успішно збережений файл. */
-        val lastSavedFile = MutableStateFlow<File?>(null)
-
-        /** Тека, куди зберігаються записи (не потребує дозволів на сховище). */
-        fun outputDir(context: Context): File {
-            val movies = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES)
-            val dir = if (movies != null) {
-                File(movies, "ScreenRecorder")
-            } else {
-                File(context.filesDir, "recordings")
-            }
-            if (!dir.exists()) dir.mkdirs()
-            return dir
-        }
+        /** Одноразова подія: запис щойно успішно збережено. */
+        val lastSaved = MutableStateFlow(false)
     }
 
     private val recording = AtomicBoolean(false)
@@ -73,7 +59,7 @@ class ScreenRecordService : Service() {
     private var mediaProjection: MediaProjection? = null
     private var virtualDisplay: VirtualDisplay? = null
     private var mediaRecorder: MediaRecorder? = null
-    private var currentFile: File? = null
+    private var currentOutput: PendingOutput? = null
     private var callbackRegistered = false
 
     private lateinit var workerThread: HandlerThread
@@ -83,7 +69,6 @@ class ScreenRecordService : Service() {
     /** Android 14+ вимагає зареєстрований Callback ще ДО createVirtualDisplay(). */
     private val projectionCallback = object : MediaProjection.Callback() {
         override fun onStop() {
-            // Система припинила захоплення (наприклад, дозвіл скасовано)
             workerHandler.post { stopRecording() }
         }
     }
@@ -101,6 +86,7 @@ class ScreenRecordService : Service() {
                 if (recording.get()) return START_STICKY
 
                 val resultCode = intent.getIntExtra(EXTRA_RESULT_CODE, 0)
+                val withAudio = intent.getBooleanExtra(EXTRA_WITH_AUDIO, false)
                 val data: Intent? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     intent.getParcelableExtra(EXTRA_RESULT_DATA, Intent::class.java)
                 } else {
@@ -114,7 +100,7 @@ class ScreenRecordService : Service() {
 
                 // FGS типу mediaProjection має стартувати ДО getMediaProjection() (вимога Android 14+)
                 startForegroundWithType(buildNotification())
-                workerHandler.post { startRecording(resultCode, data) }
+                workerHandler.post { startRecording(resultCode, data, withAudio) }
             }
 
             ACTION_STOP -> workerHandler.post { stopRecording() }
@@ -124,7 +110,7 @@ class ScreenRecordService : Service() {
 
     // ------------------------------------------------------------------ record
 
-    private fun startRecording(resultCode: Int, data: Intent) {
+    private fun startRecording(resultCode: Int, data: Intent, withAudio: Boolean) {
         val manager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
 
         val projection = try {
@@ -170,7 +156,16 @@ class ScreenRecordService : Service() {
         val bitRate = (width.toLong() * height * 4L)
             .coerceIn(2_000_000L, 16_000_000L).toInt()
 
-        val file = createOutputFile()
+        // Ціль збереження: MediaStore (API 29+) або файл
+        val stamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+        val output = try {
+            RecordingStore.createOutput(this, "REC_$stamp.mp4")
+        } catch (e: Exception) {
+            toast(getString(R.string.recording_error, "storage"))
+            stopRecording()
+            return
+        }
+
         val recorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             MediaRecorder(this)
         } else {
@@ -180,18 +175,29 @@ class ScreenRecordService : Service() {
 
         try {
             recorder.apply {
+                if (withAudio) setAudioSource(MediaRecorder.AudioSource.MIC)
                 setVideoSource(MediaRecorder.VideoSource.SURFACE)
                 setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
                 setVideoEncoder(MediaRecorder.VideoEncoder.H264)
+                if (withAudio) {
+                    setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+                    setAudioEncodingBitRate(128_000)
+                    setAudioSamplingRate(44100)
+                    setAudioChannels(1)
+                }
                 setVideoSize(width, height)
                 setVideoFrameRate(30)
                 setVideoEncodingBitRate(bitRate)
-                setOutputFile(file.absolutePath)
+                if (output.pfd != null) {
+                    setOutputFile(output.pfd.fileDescriptor)
+                } else {
+                    setOutputFile(output.file!!.absolutePath)
+                }
                 prepare()
             }
 
             virtualDisplay = projection.createVirtualDisplay(
-                "ScreenRecorder",
+                "Recora",
                 width, height, metrics.densityDpi,
                 DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
                 recorder.surface,
@@ -201,7 +207,7 @@ class ScreenRecordService : Service() {
             recorder.start()
         } catch (e: Exception) {
             e.printStackTrace()
-            file.delete()
+            RecordingStore.finishOutput(this, output, false)
             releaseRecorderAndDisplay()
             stopProjection()
             toast(getString(R.string.recording_error, e.javaClass.simpleName))
@@ -210,7 +216,7 @@ class ScreenRecordService : Service() {
         }
 
         mediaRecorder = recorder
-        currentFile = file
+        currentOutput = output
         recording.set(true)
         isRecording.value = true
     }
@@ -224,7 +230,7 @@ class ScreenRecordService : Service() {
         val wasRecording = recording.getAndSet(false)
         isRecording.value = false
 
-        val file = currentFile
+        val output = currentOutput
         var savedOk = false
         try {
             if (wasRecording) {
@@ -233,23 +239,16 @@ class ScreenRecordService : Service() {
             }
         } catch (e: Exception) {
             // Менше ~1 секунди — кодек не встиг записати кадри
-            file?.delete()
             toast(getString(R.string.recording_too_short))
         }
 
         releaseRecorderAndDisplay()
         stopProjection()
-        currentFile = null
+        currentOutput = null
 
-        if (savedOk && file != null && file.exists()) {
-            // Щоб відео зʼявилося у «Галереї»
-            MediaScannerConnection.scanFile(
-                this,
-                arrayOf(file.absolutePath),
-                arrayOf("video/mp4"),
-                null
-            )
-            lastSavedFile.value = file
+        if (output != null) {
+            RecordingStore.finishOutput(this, output, savedOk)
+            if (savedOk) lastSaved.value = true
         }
 
         stopForegroundAndSelf()
@@ -290,11 +289,6 @@ class ScreenRecordService : Service() {
     }
 
     // ------------------------------------------------------------------ misc
-
-    private fun createOutputFile(): File {
-        val stamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
-        return File(outputDir(this), "REC_$stamp.mp4")
-    }
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

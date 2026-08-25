@@ -6,17 +6,27 @@
     <string name="stop_recording">Зупинити запис</string>
     <string name="hint_start">Екран почне записуватись одразу після дозволу системи</string>
     <string name="recording_active">🔴 Іде запис екрана…</string>
+    <string name="mic_label">🎤 Звук мікрофона</string>
 
     <string name="recordings_header">Мої записи</string>
-    <string name="no_recordings">Поки що немає записів</string>
+    <string name="no_recordings">Поки що немає записів.\nПорада: довгий тап по запису — видалення.</string>
     <string name="recording_info">%1$s • %2$s</string>
 
     <string name="permission_denied">Дозвіл на запис екрана відхилено</string>
+    <string name="audio_denied">Немає дозволу на мікрофон — запис буде без звуку</string>
+    <string name="storage_denied">Немає дозволу на сховище — записи зберігатимуться у приватну теку застосунку</string>
     <string name="projection_error">Не вдалося отримати доступ до запису екрана</string>
-    <string name="recording_saved">Запис збережено: %1$s</string>
+    <string name="recording_saved">Запис збережено у «Фільми/Recora»</string>
     <string name="recording_too_short">Запис занадто короткий — файл не збережено</string>
     <string name="recording_error">Помилка запису: %1$s</string>
     <string name="no_video_player">Не знайдено застосунок для перегляду відео</string>
+
+    <string name="delete_title">Видалити запис?</string>
+    <string name="delete_message">Файл «%1$s» буде видалено назавжди.</string>
+    <string name="action_delete">Видалити</string>
+    <string name="action_cancel">Скасувати</string>
+    <string name="deleted">Запис видалено</string>
+    <string name="delete_failed">Не вдалося видалити</string>
 
     <string name="notif_channel_name">Запис екрана</string>
     <string name="notif_recording_title">Recora</string>

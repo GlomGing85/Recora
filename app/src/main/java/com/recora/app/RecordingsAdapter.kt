@@ -5,17 +5,18 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 /**
- * Простий адаптер списку записаних відео.
+ * Адаптер списку записаних відео.
+ * Тап — перегляд, довгий тап — видалення.
  */
 class RecordingsAdapter(
-    private var items: List<File>,
-    private val onClick: (File) -> Unit
+    private var items: List<Recording>,
+    private val onClick: (Recording) -> Unit,
+    private val onLongClick: (Recording) -> Unit
 ) : RecyclerView.Adapter<RecordingsAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -30,20 +31,24 @@ class RecordingsAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val file = items[position]
-        holder.name.text = file.nameWithoutExtension
+        val item = items[position]
+        holder.name.text = item.name.removeSuffix(".mp4")
         val date = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
-            .format(Date(file.lastModified()))
+            .format(Date(item.dateMillis))
         holder.info.text = holder.itemView.context.getString(
-            R.string.recording_info, formatSize(file.length()), date
+            R.string.recording_info, formatSize(item.sizeBytes), date
         )
-        holder.itemView.setOnClickListener { onClick(file) }
+        holder.itemView.setOnClickListener { onClick(item) }
+        holder.itemView.setOnLongClickListener {
+            onLongClick(item)
+            true
+        }
     }
 
     override fun getItemCount(): Int = items.size
 
     @Suppress("NotifyDataSetChanged")
-    fun submit(newItems: List<File>) {
+    fun submit(newItems: List<Recording>) {
         items = newItems
         notifyDataSetChanged() // для маленького списку достатньо
     }

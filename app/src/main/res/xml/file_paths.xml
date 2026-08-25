@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
+    <!-- Приватна тека (fallback + записи з v0.1) -->
     <external-files-path
-        name="recordings"
+        name="recordings_private"
         path="Movies/ScreenRecorder/" />
     <files-path
         name="recordings_internal"
         path="recordings/" />
+    <!-- Спільна тека на Android 7–9 -->
+    <external-path
+        name="recordings_public"
+        path="Movies/Recora/" />
 </paths>
