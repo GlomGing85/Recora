@@ -4,7 +4,7 @@
 
 [![Made with Arena.ai Agent](./arena-agent.svg)](https://arena.ai/agent)
 
-![Kotlin](https://img.shields.io/badge/kotlin-%237F52FF.svg?style=for-the-badge&logo=kotlin&logoColor=white) [![Licence](https://img.shields.io/github/license/Ileriayo/markdown-badges?style=for-the-badge)](./LICENSE.md)
+![Kotlin](https://img.shields.io/badge/kotlin-%237F52FF.svg?style=for-the-badge&logo=kotlin&logoColor=white) [![Licence](https://img.shields.io/github/license/GlomGing85/Recora?style=for-the-badge)](./LICENSE)
 ![Android](https://img.shields.io/badge/Android-%233DDC84.svg?style=for-the-badge&logo=android&logoColor=white)
 
 ---
@@ -14,7 +14,7 @@
 
 > ℹ️ **Інфо:** Цей проєкт все ще `розробляється` і **може містити помилки!**
 > 
-> Також Додаток містить код написаним **ШІ**, якщо вам неподобаються `"Слоп-Додатки"` створені Штучним інтелектом: вам необов'язково завантажувати додаток! (те саме якщо друг не любить **Додатки створенні ШІ**)
+> Також Додаток містить код, написаний **ШІ**, якщо вам не подобаються `«Слоп-Додатки»`, створені Штучним інтелектом: вам необов’язково завантажувати додаток! (те саме, якщо друг не любить **Додатки, створені ШІ**)
 >
 > Що до хороших новин.. Цей додаток є **Open Source** і я як автор цього проєкту, дозволяю використовувати та модифікувати весь код додатку!
 >
