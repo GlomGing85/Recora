@@ -1,0 +1,22 @@
+# Gradle
+.gradle/
+build/
+**/build/
+
+# Android Studio / IDEA
+*.iml
+.idea/
+.cxx/
+.externalNativeBuild/
+
+# Локальні налаштування
+local.properties
+
+# Підписані пакети
+*.apk
+*.aab
+*.keystore
+
+# Системне
+.DS_Store
+Thumbs.db

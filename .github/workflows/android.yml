@@ -1,0 +1,36 @@
+name: Android CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Збірка Debug APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Клонувати репозиторій
+        uses: actions/checkout@v4
+
+      - name: Встановити JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Налаштувати Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Зібрати Debug APK
+        # bash gradlew — щоб не залежати від біта виконання файла
+        run: bash gradlew assembleDebug
+
+      - name: Вивантажити APK як артефакт
+        uses: actions/upload-artifact@v4
+        with:
+          name: recora-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30

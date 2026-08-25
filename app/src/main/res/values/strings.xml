@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Recora</string>
+
+    <string name="start_recording">Почати запис</string>
+    <string name="stop_recording">Зупинити запис</string>
+    <string name="hint_start">Екран почне записуватись одразу після дозволу системи</string>
+    <string name="recording_active">🔴 Іде запис екрана…</string>
+
+    <string name="recordings_header">Мої записи</string>
+    <string name="no_recordings">Поки що немає записів</string>
+    <string name="recording_info">%1$s • %2$s</string>
+
+    <string name="permission_denied">Дозвіл на запис екрана відхилено</string>
+    <string name="projection_error">Не вдалося отримати доступ до запису екрана</string>
+    <string name="recording_saved">Запис збережено: %1$s</string>
+    <string name="recording_too_short">Запис занадто короткий — файл не збережено</string>
+    <string name="recording_error">Помилка запису: %1$s</string>
+    <string name="no_video_player">Не знайдено застосунок для перегляду відео</string>
+
+    <string name="notif_channel_name">Запис екрана</string>
+    <string name="notif_recording_title">Recora</string>
+    <string name="notif_recording_text">Іде запис екрана</string>
+    <string name="action_stop">Зупинити</string>
+</resources>
