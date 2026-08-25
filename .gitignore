@@ -16,6 +16,7 @@ local.properties
 *.apk
 *.aab
 *.keystore
+!debug.keystore
 
 # Системне
 .DS_Store
