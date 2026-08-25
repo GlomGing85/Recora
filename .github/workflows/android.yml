@@ -3,6 +3,7 @@ name: Android CI
 on:
   push:
     branches: [ main, master ]
+    tags: [ "v*" ]
   pull_request:
   workflow_dispatch:
 
@@ -21,6 +22,11 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: Стабільний debug-ключ підпису
+        # Без цього кожен CI-ран підписував би APK новим ключем,
+        # і Android відмовляв би в оновленні через конфлікт підписів
+        run: mkdir -p ~/.android && cp debug.keystore ~/.android/debug.keystore
+
       - name: Налаштувати Gradle
         uses: gradle/actions/setup-gradle@v4
 
@@ -34,3 +40,38 @@ jobs:
           name: recora-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
+
+  release:
+    name: GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Клонувати репозиторій
+        uses: actions/checkout@v4
+
+      - name: Встановити JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Стабільний debug-ключ підпису
+        run: mkdir -p ~/.android && cp debug.keystore ~/.android/debug.keystore
+
+      - name: Налаштувати Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Зібрати APK для релізу
+        run: bash gradlew assembleDebug
+
+      - name: Підготувати файл
+        run: cp app/build/outputs/apk/debug/app-debug.apk "Recora-${{ github.ref_name }}.apk"
+
+      - name: Опублікувати GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: "Recora-${{ github.ref_name }}.apk"
+          generate_release_notes: true
